@@ -2,9 +2,14 @@ function Gameboard() {
     const row = 3;
     const col = 3;
     const board = [];
+
     let gameOver = false;
 
+    // let isMoveValid;
+
     getGameOver = () => gameOver;
+
+    // const getIsMoveValid = () => isMoveValid;
 
     // 2d nested arrays, push cell()
 
@@ -21,8 +26,10 @@ function Gameboard() {
         if (board[row][col].getValue() === 0) {
             board[row][col].setValue(player);
             console.log(`Placed ${player} at row ${row}, column ${col}`);
+            return true;
         } else {
             console.log("You can't go here");
+            return false;
         }
     };
 
@@ -74,7 +81,7 @@ function Gameboard() {
         return null;
     };
 
-    return { board, getGameOver, getBoard, placeSymbol, printBoard, checkConditions };
+    return { board, getGameOver, getBoard, placeSymbol, getBoardValues, printBoard, checkConditions };
 
 };
 
@@ -104,34 +111,38 @@ function Gamecontroller() {
         }
     ];
 
-    const board = Gameboard();
+    const boardInstance = Gameboard();
 
     let roundCounter = 0;
 
     let currentPlayer = players[0];
 
     const switchActivePlayer = () => {
-
         currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
-
-    };
-
-    const printNewRound = () => {
-        board.printBoard();
         console.log(`It's ${currentPlayer.name}'s turn to move.`);
     };
 
+    // const printNewRound = () => {
+    //     // boardInstance.printBoard();
+    //     console.log(`It's ${currentPlayer.name}'s turn to move.`);
+    // };
+
     const playRound = (row, col, player) => {
-        console.log(`${currentPlayer.name} went in row ${row}, column ${col}.`);
 
-        board.placeSymbol(row, col, player);
+        const isMoveValid = boardInstance.placeSymbol(row, col, player);
 
-        board.checkConditions();
+        if (!isMoveValid) return;
 
-        board.printBoard();
+        boardInstance.placeSymbol(row, col, player);
+
+        // console.log(`${currentPlayer.name} went in row ${row}, column ${col}.`);
+
+        boardInstance.checkConditions();
+
+        boardInstance.printBoard();
 
         // Check if a win condition has been met
-        if (board.getGameOver()) return;
+        if (boardInstance.getGameOver()) return;
 
         // Increment counter for tie condition
         roundCounter++;
@@ -144,30 +155,61 @@ function Gamecontroller() {
         // console.log(roundCounter);
 
         switchActivePlayer();
-        printNewRound();
+        // console.log(currentPlayer);
+        // printNewRound();
 
     };
 
-    printNewRound();
+    // printNewRound();
 
     // Getter function to access private variables such as currentPlayer, not required for publish
-    // const peekCurrentPlayer = () => currentPlayer;
+    const getCurrentPlayer = () => currentPlayer;
 
-    return { switchActivePlayer, printNewRound, playRound };
+    return { boardInstance, switchActivePlayer, playRound, getCurrentPlayer };
 };
 
-const test = Gameboard();
+
+function gameObject(gameInstance) {
+
+    const cells = document.querySelectorAll('.game-cell');
+
+    const populateBoard = () => {
+
+        const currentBoard = gameInstance.boardInstance.getBoardValues();
+            cells.forEach((cell) => {
+                const r = cell.dataset.row;
+                const c = cell.dataset.col;
+                cell.textContent = currentBoard[r][c];
+            });
+    };
+
+    const playerMove = () => {
+
+        cells.forEach((cell) => {
+            cell.addEventListener('click', () => {
+                const activePlayer = gameInstance.getCurrentPlayer().symbol;
+                cell.innerHTML = activePlayer;
+                    const row = cell.dataset.row;
+                    const col = cell.dataset.col;
+                    gameInstance.playRound(row, col, activePlayer);
+                    populateBoard();
+            }); 
+        });
+    };
+
+    return { populateBoard, playerMove }
+};
 
 const controlTest = Gamecontroller();
 
-controlTest.playRound(0, 0, 1);
-controlTest.playRound(1, 0, 1);
-controlTest.playRound(2, 0, 2);
+const ui = gameObject(controlTest);
 
-controlTest.playRound(0, 1, 2);
-controlTest.playRound(1, 1, 2);
-controlTest.playRound(2, 1, 1);
+ui.populateBoard();
 
-controlTest.playRound(0, 2, 1);
-controlTest.playRound(1, 2, 1);
-controlTest.playRound(2, 2, 1);
+ui.playerMove();
+
+// Game is working, changes needed:
+// implement end game labels on html when conditions reached
+// update numbers to X and O's
+// change player name functionality - see adding 2 args for Gamecontroler and updating the players object array.
+// stylise html page for publish.

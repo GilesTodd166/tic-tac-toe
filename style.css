@@ -43,3 +43,23 @@ table {
 }
 
 /*  ABOVE - MEYER CSS RESET */
+
+header {
+	text-align: center;
+	padding: 20px;
+}
+
+main
+
+.game-container {
+	display: grid;
+	grid-template-columns: repeat(3, 50px);
+	grid-template-rows: repeat(3, 50px);
+	gap: 3px;
+
+    justify-content: center;
+}
+
+.game-cell {
+		background-color: lightgrey;
+}
