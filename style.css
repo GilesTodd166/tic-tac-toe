@@ -62,4 +62,25 @@ main
 
 .game-cell {
 		background-color: lightgrey;
+		display: grid;
+  place-items: center;
+}
+
+.game-info-container {
+	display: grid;
+	grid-template-columns: 2fr 1fr 2fr 1fr 2fr;
+	grid-rows: 1fr 1fr;
+	justify-items: center;
+}
+
+.player-one {
+	grid-column-start: 2;	
+}
+
+.game-buttons {
+	/* display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 15px; */
+	grid-row-start: 2;
+	grid-column-start: 3;
 }

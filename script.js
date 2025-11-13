@@ -3,34 +3,38 @@ function Gameboard() {
     const col = 3;
     const board = [];
 
+    const getBoard = () => board;
+
     let gameOver = false;
-
-    // let isMoveValid;
-
     getGameOver = () => gameOver;
 
-    // const getIsMoveValid = () => isMoveValid;
+    let roundCounter = 0;
 
     // 2d nested arrays, push cell()
-
     for (let i = 0; i < row; i++) {
     board[i] = [];
         for (let j = 0; j < col; j++) {
             board[i].push(Cell());
         }
     };
-    
-    const getBoard = () => board;
 
     const placeSymbol = (row, col, player) => {
-        if (board[row][col].getValue() === 0) {
+
+        if (board[row][col].getValue() === '') {
             board[row][col].setValue(player);
             console.log(`Placed ${player} at row ${row}, column ${col}`);
+                    // Check tie condition
+                    roundCounter++;
+                    if (roundCounter >= 9) {
+                        console.log(`It's a tie`);
+                        gameOver = true;
+                        return;
+                    };
             return true;
         } else {
             console.log("You can't go here");
             return false;
-        }
+        };  
     };
 
     const getBoardValues = () => board.map((row) => row.map((cell) => cell.getValue()));
@@ -40,44 +44,41 @@ function Gameboard() {
     const checkConditions = () => {
 
         const currentBoard = getBoardValues();
-
+        // Check rows
         for (let i = 0; i < board.length; i++) {
-            if (currentBoard[i][0] != 0 && 
+            if (currentBoard[i][0] != '' && 
                 currentBoard[i][0] === currentBoard[i][1] && 
                 currentBoard[i][1] === currentBoard[i][2]) {
                     console.log(`Player ${currentBoard[i][0]} is the winner - rows`);
                     gameOver = true;
                     return currentBoard[i][0];
-                // return `test-rows`;
             }
         }
         // Check cols
-        for (let i = 0; i < board[0].length; i++) {
-            if (currentBoard[0][i] != 0 && 
+        for (let i = 0; i < board.length; i++) {
+            if (currentBoard[0][i] != '' && 
                 currentBoard[0][i] === currentBoard[1][i] && 
                 currentBoard[1][i] === currentBoard[2][i]) {
                     console.log(`Player ${currentBoard[i][0]} is the winner - cols`);
                     gameOver = true;
                     return currentBoard[0][i];
-                //  return `test-cols`;
             }
         }
         // Check diagonals
-        if (currentBoard[0][0] != 0 && 
+        if (currentBoard[0][0] != '' && 
             currentBoard[0][0] === currentBoard[1][1] && 
             currentBoard[1][1] === currentBoard[2][2]) {
-                console.log(`Player ${currentBoard[i][0]} is the winner - diags1`);
+                console.log(`Player ${currentBoard[1][1]} is the winner - diags1`);
                 gameOver = true;
                 return currentBoard[0][0];
         }
-         if (currentBoard[0][2] != 0 && 
+         if (currentBoard[0][2] != '' && 
             currentBoard[0][2] === currentBoard[1][1] && 
             currentBoard[1][1] === currentBoard[2][0]) {
-                console.log(`Player ${currentBoard[i][0]} is the winner - diags2`);
+                console.log(`Player ${currentBoard[1][1]} is the winner - diags2`);
                 gameOver = true;
                 return currentBoard[0][0];
         }
-
         return null;
     };
 
@@ -87,7 +88,7 @@ function Gameboard() {
 
 // Closure Factory - creates cell object with data inside ie cell value;
 function Cell() {
-    let value = 0;
+    let value = '';
 
     const setValue = (player) => {
         value = player;
@@ -103,17 +104,15 @@ function Gamecontroller() {
     players = [
         {
             name: "Player One",
-            symbol: 1
+            symbol: 'X'
         },
         {
             name: "Player Two",
-            symbol: 2
+            symbol: 'O'
         }
     ];
 
     const boardInstance = Gameboard();
-
-    let roundCounter = 0;
 
     let currentPlayer = players[0];
 
@@ -129,34 +128,16 @@ function Gamecontroller() {
 
     const playRound = (row, col, player) => {
 
-        const isMoveValid = boardInstance.placeSymbol(row, col, player);
-
-        if (!isMoveValid) return;
-
-        boardInstance.placeSymbol(row, col, player);
-
-        // console.log(`${currentPlayer.name} went in row ${row}, column ${col}.`);
+        if (!boardInstance.placeSymbol(row, col, player)) return;
 
         boardInstance.checkConditions();
 
-        boardInstance.printBoard();
+        // boardInstance.printBoard();
 
         // Check if a win condition has been met
         if (boardInstance.getGameOver()) return;
 
-        // Increment counter for tie condition
-        roundCounter++;
-            // Check tie condition
-            if (roundCounter >= 9) {
-                console.log(`It's a tie`);
-                return;
-            }
-
-        // console.log(roundCounter);
-
-        switchActivePlayer();
-        // console.log(currentPlayer);
-        // printNewRound();
+            switchActivePlayer();
 
     };
 
@@ -185,16 +166,49 @@ function gameObject(gameInstance) {
 
     const playerMove = () => {
 
-        cells.forEach((cell) => {
-            cell.addEventListener('click', () => {
-                const activePlayer = gameInstance.getCurrentPlayer().symbol;
-                cell.innerHTML = activePlayer;
-                    const row = cell.dataset.row;
-                    const col = cell.dataset.col;
-                    gameInstance.playRound(row, col, activePlayer);
-                    populateBoard();
-            }); 
+        function handleClick(e) {
+            if (gameInstance.boardInstance.getGameOver()) return;
+                const cell = e.target;
+                const activePlayer = gameInstance.getCurrentPlayer();
+                const row = cell.dataset.row;
+                const col = cell.dataset.col;
+
+                gameInstance.playRound(row, col, activePlayer.symbol);
+                populateBoard();
+
+            if (gameInstance.boardInstance.getGameOver()) {
+                runGameOver(activePlayer);
+            };
+        };
+
+        cells.forEach(cell => {
+            cell.addEventListener('click', handleClick);
         });
+
+        function runGameOver(player) {
+        
+            cells.forEach(cell => {
+                cell.removeEventListener('click', handleClick);
+            });
+
+            const infoContainer = document.getElementById('game-info');
+            infoContainer.innerHTML = `<p>End Game - ${player.name} wins!</p>`;
+
+            const startBtn = document.getElementById('start');
+            startBtn.style.display = 'none';
+            const resetBtn = document.getElementById('reset');
+            resetBtn.style.display = 'block';
+
+            resetBtn.addEventListener('click', () => { // Stuck here beginging to figure out reset process
+
+                // reset board (cells), current player, etc.
+
+                    cells.forEach(cell => {
+                        cell.setValue('');
+                    });
+
+            });
+        };
     };
 
     return { populateBoard, playerMove }
@@ -208,8 +222,9 @@ ui.populateBoard();
 
 ui.playerMove();
 
-// Game is working, changes needed:
-// implement end game labels on html when conditions reached
-// update numbers to X and O's
+// Task 1:
+
+// Task 2:
+// reset button;
 // change player name functionality - see adding 2 args for Gamecontroler and updating the players object array.
 // stylise html page for publish.
