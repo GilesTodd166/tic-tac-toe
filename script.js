@@ -1,107 +1,63 @@
-function Gameboard() {
-    const row = 3;
-    const col = 3;
+// GAMEBOARD COMPNENT
+const gameBoard = (function () {
+    const rows = 3;
+    const cols = 3;
     const board = [];
 
-    const getBoard = () => board;
-
-    let gameOver = false;
-    getGameOver = () => gameOver;
-
-    let roundCounter = 0;
-
-    // 2d nested arrays, push cell()
-    for (let i = 0; i < row; i++) {
-    board[i] = [];
-        for (let j = 0; j < col; j++) {
-            board[i].push(Cell());
-        }
+    for (let i = 0; i < rows; i++) {
+        board[i] = [];
+        for (let j = 0; j < cols; j++) {
+            board[i][j] = '';
+        };
     };
 
-    const placeSymbol = (row, col, player) => {
+    function buildBoard() {
 
-        if (board[row][col].getValue() === '') {
-            board[row][col].setValue(player);
-            console.log(`Placed ${player} at row ${row}, column ${col}`);
-                    // Check tie condition
-                    roundCounter++;
-                    if (roundCounter >= 9) {
-                        console.log(`It's a tie`);
-                        gameOver = true;
-                        return;
-                    };
-            return true;
+    const currentBoard = board;
+
+    const mainDiv = document.querySelector('main');
+    const container = document.createElement('div');
+    container.setAttribute('class', 'container');
+    
+    mainDiv.prepend(container);
+
+        for (let r = 0; r < currentBoard.length; r++) {
+            for (let c = 0; c < currentBoard[r].length; c++) {
+
+                const cells = document.createElement('div');
+                    cells.setAttribute('class','game-cell');
+                    cells.setAttribute('data-row',[r]);
+                    cells.setAttribute('data-col',[c]);
+                    cells.textContent = currentBoard[r][c];
+                    container.append(cells);
+            };
+        };
+    };
+
+    function placeSymbol(row, col, symbol) {
+        // Check if space is empty
+        if (board[row][col] === '' &&
+            board[row][col] != 'X' &&
+            board[row][col] != 'O') {
+                board[row][col] = symbol;
+                testBoard.roundCounter++;
+                return true;
         } else {
-            console.log("You can't go here");
+            console.log("You can't go here!");
             return false;
-        };  
+        }
     };
 
-    const getBoardValues = () => board.map((row) => row.map((cell) => cell.getValue()));
+    buildBoard(); // Initialize buildBoard instance.
 
-    const printBoard = () => console.log(getBoardValues());
+    return { board, placeSymbol, buildBoard };
 
-    const checkConditions = () => {
+})();
 
-        const currentBoard = getBoardValues();
-        // Check rows
-        for (let i = 0; i < board.length; i++) {
-            if (currentBoard[i][0] != '' && 
-                currentBoard[i][0] === currentBoard[i][1] && 
-                currentBoard[i][1] === currentBoard[i][2]) {
-                    console.log(`Player ${currentBoard[i][0]} is the winner - rows`);
-                    gameOver = true;
-                    return currentBoard[i][0];
-            }
-        }
-        // Check cols
-        for (let i = 0; i < board.length; i++) {
-            if (currentBoard[0][i] != '' && 
-                currentBoard[0][i] === currentBoard[1][i] && 
-                currentBoard[1][i] === currentBoard[2][i]) {
-                    console.log(`Player ${currentBoard[i][0]} is the winner - cols`);
-                    gameOver = true;
-                    return currentBoard[0][i];
-            }
-        }
-        // Check diagonals
-        if (currentBoard[0][0] != '' && 
-            currentBoard[0][0] === currentBoard[1][1] && 
-            currentBoard[1][1] === currentBoard[2][2]) {
-                console.log(`Player ${currentBoard[1][1]} is the winner - diags1`);
-                gameOver = true;
-                return currentBoard[0][0];
-        }
-         if (currentBoard[0][2] != '' && 
-            currentBoard[0][2] === currentBoard[1][1] && 
-            currentBoard[1][1] === currentBoard[2][0]) {
-                console.log(`Player ${currentBoard[1][1]} is the winner - diags2`);
-                gameOver = true;
-                return currentBoard[0][0];
-        }
-        return null;
-    };
+// GAMECONTROLLER
+function gameController() {
 
-    return { board, getGameOver, getBoard, placeSymbol, getBoardValues, printBoard, checkConditions };
-
-};
-
-// Closure Factory - creates cell object with data inside ie cell value;
-function Cell() {
-    let value = '';
-
-    const setValue = (player) => {
-        value = player;
-    };
-
-    const getValue = () => value;
-
-    return { setValue, getValue }
-};
-
-
-function Gamecontroller() {
-    players = [
+    let players = [
         {
             name: "Player One",
             symbol: 'X'
@@ -112,119 +68,242 @@ function Gamecontroller() {
         }
     ];
 
-    const boardInstance = Gameboard();
+    currentPlayer = players[0];
 
-    let currentPlayer = players[0];
+    let isGameOver = false;
 
-    const switchActivePlayer = () => {
+    let roundCounter = 0;
+
+    // creates instance of gameBoard();
+    const boardInstance = gameBoard.board;
+
+    // reference topInfo and use a function to expose the updated message.
+    let topInfo = '';
+    function getTopInfo() { return topInfo };
+
+    function switchPlayer() {
         currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
-        console.log(`It's ${currentPlayer.name}'s turn to move.`);
     };
 
-    // const printNewRound = () => {
-    //     // boardInstance.printBoard();
-    //     console.log(`It's ${currentPlayer.name}'s turn to move.`);
-    // };
+    function checkWinner(symbol) {
 
-    const playRound = (row, col, player) => {
+        const size = boardInstance.length;
 
-        if (!boardInstance.placeSymbol(row, col, player)) return;
+        // Loop over each array
+        for (let i = 0; i < size; i++) {
 
-        boardInstance.checkConditions();
-
-        // boardInstance.printBoard();
-
-        // Check if a win condition has been met
-        if (boardInstance.getGameOver()) return;
-
-            switchActivePlayer();
-
-    };
-
-    // printNewRound();
-
-    // Getter function to access private variables such as currentPlayer, not required for publish
-    const getCurrentPlayer = () => currentPlayer;
-
-    return { boardInstance, switchActivePlayer, playRound, getCurrentPlayer };
-};
-
-
-function gameObject(gameInstance) {
-
-    const cells = document.querySelectorAll('.game-cell');
-
-    const populateBoard = () => {
-
-        const currentBoard = gameInstance.boardInstance.getBoardValues();
-            cells.forEach((cell) => {
-                const r = cell.dataset.row;
-                const c = cell.dataset.col;
-                cell.textContent = currentBoard[r][c];
-            });
-    };
-
-    const playerMove = () => {
-
-        function handleClick(e) {
-            if (gameInstance.boardInstance.getGameOver()) return;
-                const cell = e.target;
-                const activePlayer = gameInstance.getCurrentPlayer();
-                const row = cell.dataset.row;
-                const col = cell.dataset.col;
-
-                gameInstance.playRound(row, col, activePlayer.symbol);
-                populateBoard();
-
-            if (gameInstance.boardInstance.getGameOver()) {
-                runGameOver(activePlayer);
-            };
+            // Rows
+            if ( 
+                boardInstance[i][0] == symbol &&
+                boardInstance[i][1] == symbol &&
+                boardInstance[i][2] == symbol) {
+                    topInfo = `${currentPlayer.name} is the winner!`;
+                    testBoard.isGameOver = true;
+                    return;
+                };
         };
+            // Loop over array...
+            for (let j = 0; j < size; j++) {
+                 console.log("Row " + j + ":", boardInstance[j]);
 
-        cells.forEach(cell => {
-            cell.addEventListener('click', handleClick);
+                // Cols
+                if (
+                    boardInstance[0][j] == symbol &&
+                    boardInstance[1][j] == symbol &&
+                    boardInstance[2][j] == symbol) {
+                        topInfo = `${currentPlayer.name} is the winner!`;
+                        testBoard.isGameOver = true;
+                        return;
+                    };
+        };
+        
+        // Diags
+        if (
+            (boardInstance[0][0] == symbol &&
+            boardInstance[1][1] == symbol &&
+            boardInstance[2][2] == symbol) ||
+            (boardInstance[0][2] == symbol &&
+            boardInstance[1][1] == symbol &&
+            boardInstance[2][0] == symbol)) {
+                topInfo = `${currentPlayer.name} is the winner!`;
+                testBoard.isGameOver = true;
+                return;
+        };
+    };
+
+    function checkTie() {
+        if (testBoard.roundCounter === 9 && isGameOver === false) {
+            testBoard.isGameOver =  true;
+            topInfo = "It's a tie!";
+            return;
+        } else {
+            return;
+        };
+    };
+
+    function resetBoard() {
+        boardInstance.forEach(innerArray => {
+            innerArray.forEach(clear);
         });
 
-        function runGameOver(player) {
-        
-            cells.forEach(cell => {
-                cell.removeEventListener('click', handleClick);
-            });
-
-            const infoContainer = document.getElementById('game-info');
-            infoContainer.innerHTML = `<p>End Game - ${player.name} wins!</p>`;
-
-            const startBtn = document.getElementById('start');
-            startBtn.style.display = 'none';
-            const resetBtn = document.getElementById('reset');
-            resetBtn.style.display = 'block';
-
-            resetBtn.addEventListener('click', () => { // Stuck here beginging to figure out reset process
-
-                // reset board (cells), current player, etc.
-
-                    cells.forEach(cell => {
-                        cell.setValue('');
-                    });
-
-            });
+        function clear(element, index, array) {
+           array[index] = '';
         };
     };
 
-    return { populateBoard, playerMove }
+    function restartGame() {
+
+        resetBoard();
+
+        topInfo = `It is ${currentPlayer.name}'s turn.`;
+        gameTest.infoTop.textContent = topInfo;
+
+        testBoard.roundCounter = 0;
+
+        testBoard.isGameOver = false;
+
+        currentPlayer = players[0];
+
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                gameTest.renderBoard([i],[j], '');
+            };
+        };
+    };
+
+    function playTurn(row, col, symbol) {
+
+        if (testBoard.isGameOver === true) {
+            topInfo = "The game is over";
+        } else {
+
+            // Check if placeSymbol returns true, prevents checkTie and switchPlayer running on invalid move.
+            const symbolCheck = gameBoard.placeSymbol(row, col, symbol);
+
+                if (symbolCheck) {
+
+                    // Update and render move on board.
+                    gameTest.renderBoard(row, col, symbol);
+
+                    if (symbolCheck === false) {
+                        return;
+                    } else {
+
+                        checkWinner(currentPlayer.symbol);
+                        if (testBoard.isGameOver === true) {
+                            return;
+                        }
+                            checkTie();
+                            if (testBoard.isGameOver === true) {
+                                return;
+                            } else {
+                                switchPlayer();
+                                topInfo = `It is ${currentPlayer.name}'s turn.`
+                            };
+                        };
+
+                } else return;
+
+            };
+        };  
+
+    return { boardInstance, 
+             players, 
+             currentPlayer, 
+             isGameOver, 
+             roundCounter,
+             topInfo,
+             getTopInfo,
+             switchPlayer, 
+             checkWinner, 
+             checkTie,
+             resetBoard, 
+             restartGame,
+             playTurn };
 };
 
-const controlTest = Gamecontroller();
+const testBoard = gameController();
 
-const ui = gameObject(controlTest);
+    // testBoard.playTurn(0,0,currentPlayer.symbol);
 
-ui.populateBoard();
+const gameObject = (function () {
 
-ui.playerMove();
+    // Use a selector string to dynamically update target cell with args from renderBoard. Board is rendered during playTurn.
+    function renderBoard(row, col, symbol) {
+        const targetCell = "[data-row='" + row + "'][data-col='" + col + "']";
+        const cell = document.querySelector(targetCell);
+        cell.textContent = symbol;
+    };
 
-// Task 1:
+    // Update Players Names
+    const playerOne = document.querySelector('.player-one');
+    const playerOneName = document.getElementById('playerOneUpdate');
+    const playerTwo = document.querySelector('.player-two');
+    const playerTwoName = document.getElementById('playerTwoUpdate');
 
-// Task 2:
-// reset button;
-// change player name functionality - see adding 2 args for Gamecontroler and updating the players object array.
-// stylise html page for publish.
+        playerOneName.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault;
+                testBoard.players.forEach(item => {
+                    if (item.name === 'Player One' ||
+                        item.name === playerOne.textContent) {
+                            item.name = playerOneName.value;
+                            playerOne.textContent = item.name;
+                        };
+                });
+            };
+        });
+
+        playerTwoName.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault;
+                    testBoard.players.forEach(item => { 
+                        if (item.name === 'Player Two' ||
+                            item.name === playerTwo.textContent) {
+                                item.name = playerTwoName.value;
+                                playerTwo.textContent = item.name;
+                            };
+                    });
+            };
+        });
+
+    // Attach listeners for game play
+    const cells = document.querySelectorAll('.game-cell');
+
+    // Game state messages
+    const infoTop = document.querySelector('.info-top');
+    const infoBottom = document.querySelector('.info-bottom');
+        
+        cells.forEach(cell => {
+            cell.onclick = function() {
+                const row = this.dataset.row;
+                const col = this.dataset.col;
+                testBoard.playTurn(row,col,currentPlayer.symbol)
+                
+                // Update game state info in infoTop
+                const newTopInfo = testBoard.getTopInfo();
+                infoTop.textContent = newTopInfo;
+            };
+        });
+
+    // Restart game button
+    function restartGame() {
+        const restartButton = document.querySelector('restartButton');
+
+        if (testBoard.isGameOver == false) {
+            restartButton.style.display = 'block';
+        } else {
+            restartButton.style.display = 'none';
+        };
+    };
+            restartButton.addEventListener('click', function() {
+            testBoard.restartGame();
+        });
+
+    return { renderBoard, infoTop, infoBottom, restartGame }
+
+})();
+
+const gameTest = gameObject;
+
+gameTest.renderBoard();
