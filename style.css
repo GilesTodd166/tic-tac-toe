@@ -54,7 +54,7 @@ header {
 	text-align: center;
 	color: #2c2c2c;
 	padding: 60px;
-	font-size: 40px;
+	font-size: 60px;
 	font-weight: bold;
 	background-color: #847577;
 	box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
@@ -74,6 +74,7 @@ main {
 	align-content: center;
   	transition: background-color 0.3s;
 	border-radius: 5px;
+	font-size: 80px;
 }
 
 .game-cell:hover {
@@ -109,6 +110,8 @@ main {
 
 .info-top {
 	font-weight: 300;
+	text-align: center;
+	padding: 20px;
 }
 
 input, button {
